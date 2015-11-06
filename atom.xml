@@ -4,7 +4,7 @@
  <title>Dx.Yang</title>
  <link href="http://xbingoz.com/atom.xml" rel="self"/>
  <link href="http://xbingoz.com/"/>
- <updated>2015-11-06T11:44:04+08:00</updated>
+ <updated>2015-11-06T13:12:03+08:00</updated>
  <id>http://xbingoz.com</id>
  <author>
    <name>Dx.Yang</name>
@@ -364,6 +364,40 @@
 &lt;p&gt;在上面代码中，点击事件发生时draw方法会执行一次重绘，并在重绘过程中检查每一个图形是否覆盖了事件坐标，如果判断为真，则视为点击了该图形，并将该图形的index值放入数组，最后将数组作为draw方法的返回值。在这种处理机制下，如果Canvas里有N个图形，它们有一部分是重叠的，而点击事件恰巧发生在这个重叠区域上，那么draw方法的返回数组里会有N个成员。这时就有点类似事件冒泡的情况，数组的最后一个成员处于Canvas最上层，而第一个成员则在最下层，我们可以视为最上层的成员是e.target，而其他成员则是冒泡过程中传递到的节点。当然这只是最简单的一种处理方法，如果真要模拟DOM处理，还要给图形设置父子级关系。&lt;/p&gt;
 
 &lt;p&gt;以上就是Canvas事件处理的基本方法。在实际运用时，如何缓存图形参数，如何进行循环重绘，以及如何处理事件冒泡，都还需要根据实际情况花一些心思去处理。另外，click是一个比较好处理的事件，相对麻烦的是mouseover、mouseout和mousemove这些事件，由于鼠标一旦进入Canvas元素，始终发生的都是mousemove事件，所以如果要给某个图形单独设置mouseover或mouseout，还需要记录鼠标移动的路线，给图形设置进出状态。由于处理的步骤变得复杂起来，必须对性能问题提高关注。&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>经纬度转平面坐标的算法（米勒投影）</title>
+   <link href="http://xbingoz.com/2012/12/31/Miller-cylindrical/"/>
+   <updated>2012-12-31T00:00:00+08:00</updated>
+   <id>http://xbingoz.com/2012/12/31/Miller-cylindrical</id>
+   <content type="html">&lt;p&gt;地图组件是前端数据可视化非常重要的一个组成部分，根据geoJSON这种通用数据格式来生成地图是比较便捷的做法。不过对于地图坐标转换的算法，还是了解一些比较好，对于设定高阶地图组件会有帮助。这里介绍一下在米勒投影的地图上，如何将经纬度转换为平面坐标的算法，这个算法在生成世界地图的时候比较常见。（&lt;a href=&quot;http://en.wikipedia.org/wiki/Miller_cylindrical&quot; target=&quot;_blank&quot;&gt;维基百科-米勒投影&lt;/a&gt;）&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// lon 经度，西经为负数&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// lat 纬度，南纬是负数&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;millerXY&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;lon&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;lat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+     &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;L&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6381372&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;// 地球周长&lt;/span&gt;
+         &lt;span class=&quot;nx&quot;&gt;W&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;// 平面展开后，x轴等于周长&lt;/span&gt;
+         &lt;span class=&quot;nx&quot;&gt;H&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;L&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;// y轴约等于周长一半&lt;/span&gt;
+         &lt;span class=&quot;nx&quot;&gt;mill&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;2.3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;      &lt;span class=&quot;c1&quot;&gt;// 米勒投影中的一个常数，范围大约在正负2.3之间&lt;/span&gt;
+         &lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;lon&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;180&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;// 将经度从度数转换为弧度&lt;/span&gt;
+         &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;lat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;180&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;// 将纬度从度数转换为弧度&lt;/span&gt;
+     &lt;span class=&quot;c1&quot;&gt;// 这里是米勒投影的转换&lt;/span&gt;
+     &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.25&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tan&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.25&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+     &lt;span class=&quot;c1&quot;&gt;// 这里将弧度转为实际距离&lt;/span&gt;
+     &lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;W&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;W&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+     &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;H&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;H&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mill&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+     &lt;span class=&quot;c1&quot;&gt;// 转换结果的单位是公里&lt;/span&gt;
+     &lt;span class=&quot;c1&quot;&gt;// 可以根据此结果，算出在某个尺寸的画布上，各个点的坐标&lt;/span&gt;
+     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+
 </content>
  </entry>
  

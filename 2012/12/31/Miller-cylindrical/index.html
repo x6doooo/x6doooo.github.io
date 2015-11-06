@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+
+  <title>
+    经纬度转平面坐标的算法（米勒投影） &middot; 
+    Dx.Yang
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400italic,400,600,700|Abril+Fatface">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.png">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+<body>
+
+<header class="masthead">
+    <div class="masthead-inner">
+
+        <a href="/">
+            <img src="https://avatars0.githubusercontent.com/u/1572757?v=3&s=360" width="130" style="border-radius:130px">
+        </a>
+
+        <h1 style="font-size: 40px">Dx.Yang</h1>
+
+        <p class="lead">Programmer</p>
+
+        <div class="colophon">
+            <ul class="colophon-links">
+                <!--li>
+                  <a href="https://github.com/mdo/hyde/archive/v1.1.1.zip">Download</a>
+                </li-->
+                <li>
+                    <a href="https://github.com/x6doooo">GitHub</a>
+                </li>
+                <li>
+                    <a href="mailto:x6doooo@gmail.com">Email</a>
+                </li>
+                <!--li>Currently v1.1.1</li-->
+            </ul>
+            <p>&copy; 2014. Dx.Yang All rights reserved.</p>
+        </div>
+    </div>
+</header>
+
+<div class="content container">
+    <div class="post">
+  <h1>经纬度转平面坐标的算法（米勒投影）</h1>
+  <span class="post-date">31 Dec 2012</span>
+  <p>地图组件是前端数据可视化非常重要的一个组成部分，根据geoJSON这种通用数据格式来生成地图是比较便捷的做法。不过对于地图坐标转换的算法，还是了解一些比较好，对于设定高阶地图组件会有帮助。这里介绍一下在米勒投影的地图上，如何将经纬度转换为平面坐标的算法，这个算法在生成世界地图的时候比较常见。（<a href="http://en.wikipedia.org/wiki/Miller_cylindrical" target="_blank">维基百科-米勒投影</a>）</p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// lon 经度，西经为负数</span>
+<span class="c1">// lat 纬度，南纬是负数</span>
+<span class="kd">function</span> <span class="nx">millerXY</span> <span class="p">(</span><span class="nx">lon</span><span class="p">,</span> <span class="nx">lat</span><span class="p">){</span>
+     <span class="kd">var</span> <span class="nx">L</span> <span class="o">=</span> <span class="mi">6381372</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>     <span class="c1">// 地球周长</span>
+         <span class="nx">W</span> <span class="o">=</span> <span class="nx">L</span><span class="p">,</span>     <span class="c1">// 平面展开后，x轴等于周长</span>
+         <span class="nx">H</span> <span class="o">=</span> <span class="nx">L</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>     <span class="c1">// y轴约等于周长一半</span>
+         <span class="nx">mill</span> <span class="o">=</span> <span class="mf">2.3</span><span class="p">,</span>      <span class="c1">// 米勒投影中的一个常数，范围大约在正负2.3之间</span>
+         <span class="nx">x</span> <span class="o">=</span> <span class="nx">lon</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">180</span><span class="p">,</span>     <span class="c1">// 将经度从度数转换为弧度</span>
+         <span class="nx">y</span> <span class="o">=</span> <span class="nx">lat</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">180</span><span class="p">;</span>     <span class="c1">// 将纬度从度数转换为弧度</span>
+     <span class="c1">// 这里是米勒投影的转换</span>
+     <span class="nx">y</span> <span class="o">=</span> <span class="mf">1.25</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">tan</span><span class="p">(</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">+</span> <span class="mf">0.4</span> <span class="o">*</span> <span class="nx">y</span> <span class="p">)</span> <span class="p">);</span>
+     <span class="c1">// 这里将弧度转为实际距离</span>
+     <span class="nx">x</span> <span class="o">=</span> <span class="p">(</span> <span class="nx">W</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">)</span> <span class="o">+</span> <span class="p">(</span> <span class="nx">W</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="p">)</span> <span class="p">)</span> <span class="o">*</span> <span class="nx">x</span><span class="p">;</span>
+     <span class="nx">y</span> <span class="o">=</span> <span class="p">(</span> <span class="nx">H</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">)</span> <span class="o">-</span> <span class="p">(</span> <span class="nx">H</span> <span class="o">/</span> <span class="p">(</span> <span class="mi">2</span> <span class="o">*</span> <span class="nx">mill</span> <span class="p">)</span> <span class="p">)</span> <span class="o">*</span> <span class="nx">y</span><span class="p">;</span>
+     <span class="c1">// 转换结果的单位是公里</span>
+     <span class="c1">// 可以根据此结果，算出在某个尺寸的画布上，各个点的坐标</span>
+     <span class="k">return</span> <span class="p">{</span>
+          <span class="nx">x</span> <span class="o">:</span> <span class="nx">x</span><span class="p">,</span>
+          <span class="nx">y</span> <span class="o">:</span> <span class="nx">y</span>
+     <span class="p">};</span>
+<span class="p">}</span></code></pre></div>
+
+
+
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2014/04/08/nodejs-cluster/">
+            Node.js - 利用进程通信实现Cluster共享内存
+            <small>08 Apr 2014</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/2013/04/07/canvas/">
+            HTML5 Canvas的事件处理
+            <small>07 Apr 2013</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+</div>
+
+</body>
+</html>
